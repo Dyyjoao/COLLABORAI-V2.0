@@ -27,7 +27,6 @@ jobs:
         run: |
           APP_BUILD=$(find . -path "*/app/build.gradle.kts" | head -1)
           PROJECT=$(dirname "$(dirname "$APP_BUILD")")
-          echo "Raiz: $PROJECT"
           echo "project_dir=$PROJECT" >> $GITHUB_OUTPUT
 
       - name: Criar gradle.properties
@@ -37,6 +36,29 @@ jobs:
           echo "android.enableJetifier=true" >> gradle.properties
           echo "android.suppressUnsupportedCompileSdk=35" >> gradle.properties
           echo "org.gradle.jvmargs=-Xmx2048m" >> gradle.properties
+
+      - name: Gerar ícones do app
+        run: |
+          RES="${{ steps.find_project.outputs.project_dir }}/app/src/main/res"
+          for DENSITY in mipmap-mdpi mipmap-hdpi mipmap-xhdpi mipmap-xxhdpi mipmap-xxxhdpi; do
+            mkdir -p "$RES/$DENSITY"
+            case $DENSITY in
+              mipmap-mdpi)    SIZE=48  ;;
+              mipmap-hdpi)    SIZE=72  ;;
+              mipmap-xhdpi)   SIZE=96  ;;
+              mipmap-xxhdpi)  SIZE=144 ;;
+              mipmap-xxxhdpi) SIZE=192 ;;
+            esac
+            convert -size ${SIZE}x${SIZE} xc:#2563EB \
+              -fill white -gravity Center \
+              -pointsize $((SIZE/3)) -annotate 0 "CA" \
+              "$RES/$DENSITY/ic_launcher.png"
+            convert -size ${SIZE}x${SIZE} \
+              \( xc:none -fill "#2563EB" -draw "circle $((SIZE/2)),$((SIZE/2)) $((SIZE/2)),0" \) \
+              -fill white -gravity Center \
+              -pointsize $((SIZE/3)) -annotate 0 "CA" \
+              "$RES/$DENSITY/ic_launcher_round.png"
+          done
 
       - name: Build APK Debug
         run: |

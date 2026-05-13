@@ -14,16 +14,18 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Encontrar e executar gradlew
+      - name: Instalar Gradle
         run: |
-          GRADLEW=$(find . -name "gradlew" | head -1)
-          echo "Encontrado: $GRADLEW"
-          chmod +x "$GRADLEW"
-          DIR=$(dirname "$GRADLEW")
-          cd "$DIR" && ./gradlew assembleDebug
+          wget -q https://services.gradle.org/distributions/gradle-8.7-bin.zip
+          unzip -q gradle-8.7-bin.zip -d /opt/gradle
+          echo "/opt/gradle/gradle-8.7/bin" >> $GITHUB_PATH
 
-      - name: Encontrar APK gerado
-        run: find . -name "*.apk" -type f
+      - name: Encontrar projeto e buildar
+        run: |
+          PROJECT=$(dirname $(find . -name "settings.gradle.kts" | head -1))
+          echo "Projeto encontrado em: $PROJECT"
+          cd "$PROJECT"
+          gradle assembleDebug --no-daemon --stacktrace
 
       - uses: actions/upload-artifact@v4
         with:

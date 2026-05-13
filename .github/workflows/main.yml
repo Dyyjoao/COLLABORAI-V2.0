@@ -43,4 +43,8 @@ jobs:
           cd "${{ steps.find_project.outputs.project_dir }}"
           gradle assembleDebug --no-daemon
 
-      - uses: a
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CollaboraAI-debug
+          path: "**/*.apk"
+          retention-days: 30

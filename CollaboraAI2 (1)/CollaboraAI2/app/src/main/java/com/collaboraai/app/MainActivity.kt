@@ -44,13 +44,7 @@ class MainActivity : AppCompatActivity() {
         setupWebView()
         setupTts()
         setupFab()
-
         handleIntent(intent)
-    }
-
-    override fun onNewIntent(intent: Intent?) {
-        super.onNewIntent(intent)
-        intent?.let { handleIntent(it) }
     }
 
     private fun handleIntent(intent: Intent) {
@@ -64,7 +58,6 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
-
         val query = intent.getStringExtra(EXTRA_QUERY)
         if (!query.isNullOrBlank()) {
             binding.webView.loadUrl("$COLLABORAAI_URL?q=${Uri.encode(query)}")
@@ -73,16 +66,14 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupWebView() {
         binding.webView.apply {
-            settings.apply {
-                javaScriptEnabled = true
-                domStorageEnabled = true
-                loadWithOverviewMode = true
-                useWideViewPort = true
-                setSupportZoom(true)
-                builtInZoomControls = true
-                displayZoomControls = false
-                mediaPlaybackRequiresUserGesture = false
-            }
+            settings.javaScriptEnabled = true
+            settings.domStorageEnabled = true
+            settings.loadWithOverviewMode = true
+            settings.useWideViewPort = true
+            settings.setSupportZoom(true)
+            settings.builtInZoomControls = true
+            settings.displayZoomControls = false
+            settings.mediaPlaybackRequiresUserGesture = false
 
             webChromeClient = object : WebChromeClient() {
                 override fun onProgressChanged(view: WebView?, newProgress: Int) {
@@ -127,12 +118,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun openAssistant() {
-        tts.speak(
-            "Olá! Como posso ajudar?",
-            TextToSpeech.QUEUE_FLUSH,
-            null,
-            "greeting"
-        )
+        tts.speak("Olá! Como posso ajudar?", TextToSpeech.QUEUE_FLUSH, null, "greeting")
         startActivity(Intent(this, AssistantActivity::class.java))
     }
 

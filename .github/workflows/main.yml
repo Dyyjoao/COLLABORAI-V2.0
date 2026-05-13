@@ -3,9 +3,11 @@ on:
   push:
     branches: [ main, master ]
   workflow_dispatch:
+
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
@@ -14,18 +16,26 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Instalar Gradle
+      - name: Instalar Gradle 8.7
         run: |
           wget -q https://services.gradle.org/distributions/gradle-8.7-bin.zip
           unzip -q gradle-8.7-bin.zip -d /opt/gradle
           echo "/opt/gradle/gradle-8.7/bin" >> $GITHUB_PATH
 
-      - name: Encontrar projeto e buildar
+      - name: Encontrar pasta raiz do projeto Android
+        id: find_project
         run: |
-          PROJECT=$(dirname $(find . -name "settings.gradle.kts" | head -1))
-          echo "Projeto encontrado em: $PROJECT"
-          cd "$PROJECT"
-          gradle assembleDebug --no-daemon --stacktrace
+          APP_BUILD=$(find . -path "*/app/build.gradle.kts" | head -1)
+          echo "Encontrado: $APP_BUILD"
+          PROJECT=$(dirname "$(dirname "$APP_BUILD")")
+          echo "Raiz: $PROJECT"
+          echo "project_dir=$PROJECT" >> $GITHUB_OUTPUT
+
+      - name: Build APK Debug
+        run: |
+          cd "${{ steps.find_project.outputs.project_dir }}"
+          echo "Buildando em: $(pwd)"
+          gradle assembleDebug --no-daemon
 
       - uses: actions/upload-artifact@v4
         with:

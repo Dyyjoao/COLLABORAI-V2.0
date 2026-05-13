@@ -1,132 +1,70 @@
-package com.collaboraai.app
+Run cd "./CollaboraAI2 (1)/CollaboraAI2"
 
-import android.content.Intent
-import android.graphics.Bitmap
-import android.net.Uri
-import android.os.Bundle
-import android.view.View
-import android.webkit.*
-import androidx.appcompat.app.AppCompatActivity
-import com.collaboraai.app.databinding.ActivityMainBinding
+Welcome to Gradle 8.7!
 
-class MainActivity : AppCompatActivity() {
+Here are the highlights of this release:
+ - Compiling and testing with Java 22
+ - Cacheable Groovy script compilation
+ - New methods in lazy collection properties
 
-    private lateinit var binding: ActivityMainBinding
+For more details see https://docs.gradle.org/8.7/release-notes.html
 
-    companion object {
-        const val COLLABORAAI_URL = "https://app.collaborai.io/"
-        const val EXTRA_ASSISTANT_MESSAGE = "extra_assistant_message"
-    }
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.7/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:dataBindingMergeDependencyArtifactsDebug
+> Task :app:generateDebugResValues
+> Task :app:generateDebugResources
+> Task :app:packageDebugResources
+> Task :app:parseDebugLocalResources
+> Task :app:mapDebugSourceSetPaths
+> Task :app:checkDebugAarMetadata
+> Task :app:createDebugCompatibleScreenManifests
+> Task :app:extractDeepLinksDebug
+> Task :app:mergeDebugResources
+> Task :app:processDebugMainManifest
+> Task :app:dataBindingGenBaseClassesDebug
+> Task :app:processDebugManifest
+> Task :app:javaPreCompileDebug
+> Task :app:mergeDebugShaders
+> Task :app:compileDebugShaders NO-SOURCE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:mergeDebugAssets
+> Task :app:compressDebugAssets
+> Task :app:desugarDebugFileDependencies
+> Task :app:processDebugManifestForPackage
+> Task :app:checkDebugDuplicateClasses
+> Task :app:mergeDebugStartupProfile
+> Task :app:processDebugResources
+> Task :app:mergeExtDexDebug
+> Task :app:mergeDebugJniLibFolders
+> Task :app:mergeLibDexDebug
+> Task :app:mergeDebugNativeLibs NO-SOURCE
+> Task :app:stripDebugDebugSymbols NO-SOURCE
+> Task :app:validateSigningDebug
+> Task :app:writeDebugAppMetadata
+> Task :app:writeDebugSigningConfigVersions
+e: file:///home/runner/work/COLLABORAI-V2.0/COLLABORAI-V2.0/CollaboraAI2%20(1)/CollaboraAI2/app/src/main/java/com/collaboraai/app/MainActivity.kt:34:5 'onNewIntent' overrides nothing.
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-        setupWebView()
-        setupUI()
+e: file:///home/runner/work/COLLABORAI-V2.0/COLLABORAI-V2.0/CollaboraAI2%20(1)/CollaboraAI2/app/src/main/java/com/collaboraai/app/MainActivity.kt:35:27 Argument type mismatch: actual type is 'android.content.Intent?', but 'android.content.Intent' was expected.
+> Task :app:compileDebugKotlin FAILED
 
-        // Se veio do assistente com uma mensagem, injeta no site após carregar
-        intent?.getStringExtra(EXTRA_ASSISTANT_MESSAGE)?.let { msg ->
-            pendingMessage = msg
-        }
-    }
+FAILURE: Build failed with an exception.
+29 actionable tasks: 29 executed
 
-    override fun onNewIntent(intent: Intent?) {
-        super.onNewIntent(intent)
-        intent?.getStringExtra(EXTRA_ASSISTANT_MESSAGE)?.let { msg ->
-            injectMessage(msg)
-        }
-    }
+* What went wrong:
+Execution failed for task ':app:compileDebugKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
 
-    private var pendingMessage: String? = null
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
 
-    private fun injectMessage(msg: String) {
-        // Tenta colocar o texto no campo de input do CollaboraAI via JS
-        val js = """
-            (function() {
-                var inputs = document.querySelectorAll('textarea, input[type=text]');
-                if (inputs.length > 0) {
-                    inputs[inputs.length-1].value = ${msg.replace("\"","\\\"").let { "\"$it\"" }};
-                    inputs[inputs.length-1].dispatchEvent(new Event('input', {bubbles:true}));
-                }
-            })();
-        """.trimIndent()
-        binding.webView.evaluateJavascript(js, null)
-    }
-
-    private fun setupWebView() {
-        with(binding.webView) {
-            settings.apply {
-                javaScriptEnabled = true
-                domStorageEnabled = true
-                loadWithOverviewMode = true
-                useWideViewPort = true
-                builtInZoomControls = false
-                setSupportZoom(false)
-                mediaPlaybackRequiresUserGesture = false
-                allowFileAccess = true
-                cacheMode = WebSettings.LOAD_DEFAULT
-            }
-
-            webViewClient = object : WebViewClient() {
-                override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
-                    binding.progressBar.visibility = View.VISIBLE
-                }
-                override fun onPageFinished(view: WebView?, url: String?) {
-                    binding.progressBar.visibility = View.GONE
-                    pendingMessage?.let {
-                        injectMessage(it)
-                        pendingMessage = null
-                    }
-                }
-                override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {
-                    if (request?.isForMainFrame == true) {
-                        binding.layoutError.visibility = View.VISIBLE
-                        binding.webView.visibility = View.GONE
-                    }
-                }
-                override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
-                    val url = request?.url?.toString() ?: return false
-                    return when {
-                        url.startsWith("mailto:") || url.startsWith("tel:") -> {
-                            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
-                            true
-                        }
-                        else -> false
-                    }
-                }
-            }
-
-            webChromeClient = object : WebChromeClient() {
-                override fun onPermissionRequest(request: PermissionRequest?) {
-                    runOnUiThread { request?.grant(request.resources) }
-                }
-                override fun onProgressChanged(view: WebView?, newProgress: Int) {
-                    binding.progressBar.progress = newProgress
-                }
-            }
-
-            loadUrl(COLLABORAAI_URL)
-        }
-    }
-
-    private fun setupUI() {
-        binding.fabAssistant.setOnClickListener {
-            startActivity(Intent(this, AssistantActivity::class.java))
-        }
-        binding.btnRetry.setOnClickListener {
-            binding.layoutError.visibility = View.GONE
-            binding.webView.visibility = View.VISIBLE
-            binding.webView.reload()
-        }
-    }
-
-    override fun onBackPressed() {
-        if (binding.webView.canGoBack()) binding.webView.goBack()
-        else super.onBackPressed()
-    }
-
-    override fun onResume() { super.onResume(); binding.webView.onResume() }
-    override fun onPause() { super.onPause(); binding.webView.onPause() }
-    override fun onDestroy() { binding.webView.destroy(); super.onDestroy() }
-}
+BUILD FAILED in 1m 37s
+Error: Process completed with exit code 1.

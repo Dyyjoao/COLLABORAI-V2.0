@@ -1,4 +1,5 @@
 name: Build APK
+
 on:
   push:
     branches: [ main, master ]
@@ -27,6 +28,7 @@ jobs:
         run: |
           APP_BUILD=$(find . -path "*/app/build.gradle.kts" | head -1)
           PROJECT=$(dirname "$(dirname "$APP_BUILD")")
+          echo "Raiz do projeto: $PROJECT"
           echo "project_dir=$PROJECT" >> $GITHUB_OUTPUT
 
       - name: Criar gradle.properties
